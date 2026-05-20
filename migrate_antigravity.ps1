@@ -2,6 +2,13 @@
 # Stop on errors
 $ErrorActionPreference = "Stop"
 
+Write-Host "=============================================" -ForegroundColor Red -BackgroundColor Black
+Write-Host " !!! WARNING: USE AT YOUR OWN RISK !!!" -ForegroundColor Red -BackgroundColor Black
+Write-Host " This script modifies configuration databases and profiles." -ForegroundColor Red
+Write-Host " Make sure you have backed up any critical directories." -ForegroundColor Red
+Write-Host "=============================================" -ForegroundColor Red -BackgroundColor Black
+Write-Host
+
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host " Antigravity IDE Migration Script" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
@@ -34,6 +41,29 @@ $TempExtractPath = Join-Path $ScratchDir "extracted_temp"
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $BackupUserDir = Join-Path $AppDataRoam "Antigravity IDE\User_Backup_$Timestamp"
 $BackupAgentDir = Join-Path $env:USERPROFILE ".gemini\antigravity-ide_Backup_$Timestamp"
+
+# 1.5 Paths Verification & Confirmation
+Write-Host "=============================================" -ForegroundColor Yellow
+Write-Host " Path Configuration Summary" -ForegroundColor Yellow
+Write-Host "=============================================" -ForegroundColor Yellow
+Write-Host "Source Paths:" -ForegroundColor White
+Write-Host " - Old Gemini Agent Dir (Source): $OldGeminiDir [Exists: $(Test-Path $OldGeminiDir)]" -ForegroundColor Gray
+Write-Host " - Profile Backup Archive (Source): $BackupZip [Exists: $(Test-Path $BackupZip)]" -ForegroundColor Gray
+Write-Host "Target Paths:" -ForegroundColor White
+Write-Host " - Active User Profile (Target): $ActiveUserDir [Exists: $(Test-Path $ActiveUserDir)]" -ForegroundColor Gray
+Write-Host " - Active Gemini Agent Dir (Target): $NewGeminiDir [Exists: $(Test-Path $NewGeminiDir)]" -ForegroundColor Gray
+Write-Host "Backup Destinations:" -ForegroundColor White
+Write-Host " - User Profile Backup: $BackupUserDir" -ForegroundColor Gray
+Write-Host " - Agent Folder Backup: $BackupAgentDir" -ForegroundColor Gray
+Write-Host "=============================================" -ForegroundColor Yellow
+Write-Host
+
+$confirmation = Read-Host "Are these paths correct? Do you wish to proceed with the migration? [Y/N]"
+if ($confirmation -ne "Y" -and $confirmation -ne "y") {
+    Write-Host "Migration cancelled by user. Exiting." -ForegroundColor Red
+    exit 0
+}
+Write-Host
 
 # 2. Safety Backups
 Write-Host "Creating safety backups of target folders..." -ForegroundColor Yellow

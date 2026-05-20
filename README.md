@@ -13,6 +13,10 @@
 
 This repository contains a collection of scripts used to manually migrate and restore user profiles, recent projects lists, and agent conversation history following a failed upgrade or installation of **Antigravity IDE**.
 
+> [!CAUTION]
+> **⚠️ USE AT YOUR OWN RISK**  
+> This repository contains unofficial workaround scripts. Executing them will modify configuration settings, files, and databases. Always backup your critical files manually beforehand, review all script files, and verify the code yourself before running them.
+
 > [!WARNING]  
 > **DISCLAIMER & CAUTION**  
 > * **Do your own research**: These scripts were created based on a specific migration scenario (Windows environment, upgrading to SQLite databases from Protobuf state).

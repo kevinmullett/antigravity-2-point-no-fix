@@ -8,7 +8,7 @@ I have packaged the PowerShell automation and Python helper scripts I used into 
 
 ---
 
-### ⚠️ IMPORTANT DISCLAIMER & CAUTION
+### ⚠️ IMPORTANT DISCLAIMER: USE AT YOUR OWN RISK
 * **Do your own research**: These scripts were created for a Windows environment migrating Protobuf states to SQLite.
 * **Verify before running**: Do NOT execute any scripts blindly. Review the code, use your own LLM instance to analyze and verify what each script does, and test them on backup copies of your files.
 * **Safety Backups & Manual Cleanup**: Before any file modifications occur, the scripts automatically duplicate your active folders to prevent data loss. **We have purposely omitted automated cleanup of these backups.** This is to ensure you retain working copies of your files; you must manually delete them once you've verified everything works.
