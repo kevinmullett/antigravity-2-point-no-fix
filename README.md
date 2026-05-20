@@ -72,3 +72,49 @@ Ensure Python 3 is installed on your machine and available in your environment p
    ```
 5. Relaunch the Antigravity IDE.
 6. Verify your workspaces and chats, and manually delete the backup directories.
+
+---
+
+## 🤖 LLM-Assisted Research & Customization (PRD + Prompt)
+
+If you wish to follow the safety guidance and have your own LLM instance (Gemini, ChatGPT, Claude, etc.) review the codebase, explain the migration mechanics, or customize/rewrite the scripts for your environment, you can use the mini-PRD and prompt below.
+
+### Mini-PRD: Antigravity IDE Restoration & Migration
+
+#### 1. Context & Objective
+Following a failed IDE upgrade, the user lost their recent workspaces list and past chat conversation history. The objective is to restore the user profile, recover past chat sessions (converting them from `.pb` to SQLite format), and restore the recent projects list in the IDE's database.
+
+#### 2. Requirements & Execution Flow
+1. **Safety First**: Must detect if `Antigravity IDE` is running and refuse to proceed until closed (preventing database locks or overrides).
+2. **Directory Duplication**: Must clone the active `%APPDATA%\Antigravity IDE\User` and `%USERPROFILE%\.gemini\antigravity-ide` directories into timestamped backup folders before making edits.
+3. **Settings Recovery**: If an `%APPDATA%\Antigravity IDE\Antigravity IDE.zip` backup archive exists, extract the `User` directory and copy files to the active profile location.
+4. **Chat Migration Trigger**:
+   - Copy old conversation `.pb` files from `%USERPROFILE%\.gemini\antigravity\conversations` to the new location `%USERPROFILE%\.gemini\antigravity-ide\conversations`.
+   - Copy metadata state files (`agyhub_summaries_proto.pb`, `antigravity_state.pbtxt`, `user_settings.pb`).
+   - Modify the `migrate_convos_into_projects` key in `antigravity_state.pbtxt` to `MIGRATION_STATUS_UNSPECIFIED`. (This signals the IDE server on next startup to automatically migrate `.pb` files to SQLite `.db` databases).
+5. **Recent Projects Restore**:
+   - Connect to the SQLite database at `%APPDATA%\Antigravity IDE\User\globalStorage\state.vscdb`.
+   - Update/Insert the JSON array of workspace folder URIs into the `ItemTable` under the key `history.recentlyOpenedPathsList`.
+6. **No Auto-Cleanup**: Print all backup directory paths at completion and instruct the user to verify functionality and delete backups manually.
+
+---
+
+### LLM Prompt for Analyzing / Customizing this Repository
+
+Copy and paste this prompt into your own LLM instance along with the code files in this repository:
+
+```text
+You are an expert software engineer and systems administrator. I want to perform a manual state/profile migration for my Antigravity IDE, which broke after a recent upgrade. 
+
+Here is the codebase for a migration tool:
+- README.md: Explains the safety policies and overall flow.
+- migrate_antigravity.ps1: Coordinates directory backups and file copying.
+- reset_migration.py: Modifies state configuration flags.
+- restore_recents.py: Inserts project paths into the SQLite database.
+
+Please review these files and perform the following tasks:
+1. Explain step-by-step how these scripts interact with my local files and databases (specifically 'state.vscdb' and 'antigravity_state.pbtxt').
+2. Identify any potential security vulnerabilities, path issues, or edge cases that could cause data loss.
+3. (Optional) Help me adapt or rewrite these scripts to work on my specific operating system or custom directory structure (e.g. macOS/Linux, custom profile paths, etc.).
+4. Guide me through running this safely on my machine, ensuring I have correct manual backups.
+```
