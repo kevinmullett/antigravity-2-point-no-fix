@@ -1,0 +1,12 @@
+# Temporary extraction paths
+extracted_temp/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Backups created by migration scripts
+*.user_restore_backup
+*.backup
+*Backup_*
