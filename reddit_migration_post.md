@@ -4,7 +4,7 @@ If you recently experienced a failed upgrade or installation of **Antigravity ID
 
 I have packaged the PowerShell automation and Python helper scripts I used into a Git repository so you can review the code directly instead of bloating this post.
 
-**GitHub Repository:** `https://github.com/<YourUsername>/antigravity-ide-migration-tool`
+**GitHub Repository:** `https://github.com/kevinmullett/antigravity-2-point-no-fix`
 
 ---
 

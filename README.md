@@ -1,15 +1,27 @@
 # Antigravity IDE Profile and Session Migration Tool
 
+<div align="center">
+
+[![Antigravity IDE Migration](https://img.shields.io/badge/ANTIGRAVITY_IDE-MIGRATION_&_RESTORE-orange?style=for-the-badge)](#)
+
+[![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&style=flat-square)](#)
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue?logo=powershell&style=flat-square)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&style=flat-square)](#)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
+</div>
+
 This repository contains a collection of scripts used to manually migrate and restore user profiles, recent projects lists, and agent conversation history following a failed upgrade or installation of **Antigravity IDE**.
 
 > [!WARNING]  
 > **DISCLAIMER & CAUTION**  
 > * **Do your own research**: These scripts were created based on a specific migration scenario (Windows environment, upgrading to SQLite databases from Protobuf state).
 > * **Verify before running**: Do NOT execute any script blindly. Review the code, use your own LLM instance to verify what each command does, and test on backup copies of your files.
+> * **No Warranty**: This code is licensed under the MIT License and provided "as is", without warranty of any kind.
 
 ---
 
-## Safety & Backups Policy
+## 🛡️ Safety & Backups Policy
 
 ### Pre-execution Backups
 To prevent data loss, the scripts are designed to automatically duplicate all target directories before any file writes or modifications take place:
@@ -25,15 +37,16 @@ This is by design to ensure that you retain full custody of your backup files. A
 
 ---
 
-## File Structure
+## 📁 File Structure
 
 * `migrate_antigravity.ps1`: The main PowerShell wrapper script that orchestrates the backup, profile restore, file copying, and Python helper execution.
 * `reset_migration.py`: Replaces the conversation migration status flag in your `.pbtxt` file so the language server runs the database migration.
 * `restore_recents.py`: Restores the "Recent Projects" list in your SQLite global storage.
+* `LICENSE`: MIT License terms protecting you and detailing the limitation of liability.
 
 ---
 
-## Usage Instructions
+## 🚀 Usage Instructions
 
 ### Prerequisite
 Ensure Python 3 is installed on your machine and available in your environment path.
