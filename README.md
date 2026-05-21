@@ -4,6 +4,7 @@
 
 [![Antigravity IDE Migration](https://img.shields.io/badge/ANTIGRAVITY_IDE-MIGRATION_&_RESTORE-orange?style=for-the-badge)](#)
 
+[![Version](https://img.shields.io/badge/Version-2.0.0-brightgreen?style=flat-square)](#changelog)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&style=flat-square)](#)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue?logo=powershell&style=flat-square)](#)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&style=flat-square)](#)
@@ -41,11 +42,38 @@ This is by design to ensure that you retain full custody of your backup files. A
 
 ---
 
+## 📋 What This Tool Can and Cannot Recover
+
+Be realistic about the outcome before you run this — the forced update overwrote some state that no migration script can bring back.
+
+### ✅ Things this tool restores
+- **User profile** (`settings.json`, snippets, history, `globalStorage`, `workspaceStorage`) from the `Antigravity IDE.zip` backup the IDE produces under `%APPDATA%\Antigravity IDE\`.
+- **Recent projects list** in `state.vscdb` (key `history.recentlyOpenedPathsList`).
+- **Agent state files**: `agyhub_summaries_proto.pb`, `antigravity_state.pbtxt`, `user_settings.pb`.
+- **Conversation `.pb` files** copied from `%USERPROFILE%\.gemini\antigravity\conversations\` to the new agent dir.
+- **Conversation migration flag** reset (`MIGRATION_STATUS_COMPLETED` → `MIGRATION_STATUS_UNSPECIFIED`) so the IDE re-attempts its internal `.pb` → SQLite trajectory conversion on next launch.
+- **(v2.0.0)** Additional agent subfolders: `annotations\`, `prompting\` (recursively), and `implicit\` from the old agent dir.
+
+### ⚠️ Things this tool cannot recover
+
+| Item | Why it can't be recovered |
+|---|---|
+| The Sessions UI list (your past agent chats as shown in the IDE) | The new build's `chat.ChatSessionStore.index` is initialized empty on first launch and its renderer log records `ChatSessionStore: Migrating 0 chat sessions from storage service to file system`. The internal migration path does not consume the old `.pb` files. We still copy those files in case Google ships a recovery tool later. |
+| Plaintext of pre-update conversations | The old `.pb` conversation files are encrypted at rest — their bytes show no compression magic, do not decompress, and have high entropy. Without Google's keys they cannot be decrypted offline. |
+| Per-workspace open tabs / panel state for every project except those captured in the backup zip | The IDE-written `Antigravity IDE.zip` is created **after** the broken update has already wiped state, so it only contains whichever `workspaceStorage` entries happened to exist at zip time. Anything the wipe destroyed is gone. The IDE will recreate these as you reopen projects. |
+
+### 🐛 Known IDE-side bugs (not fixable from the filesystem)
+- `renderer.log` contains `[createInstance] aae depends on UNKNOWN service agentSessions` — an unresolved service registration in the build that ships with the forced update. This is the most likely root cause of why Sessions never repopulate even when you re-run the migration.
+- Worth reporting upstream so other affected users can be addressed.
+
+---
+
 ## 📁 File Structure
 
-* `migrate_antigravity.ps1`: The main PowerShell wrapper script that orchestrates the backup, profile restore, file copying, and Python helper execution.
+* `migrate_antigravity.ps1`: The main PowerShell wrapper script that orchestrates the backup, profile restore, file copying, additional subfolder migration, and Python helper execution.
 * `reset_migration.py`: Replaces the conversation migration status flag in your `.pbtxt` file so the language server runs the database migration.
 * `restore_recents.py`: Restores the "Recent Projects" list in your SQLite global storage.
+* `.gitignore`: Excludes machine-specific recovery helpers and timestamped backup folders from version control.
 * `LICENSE`: MIT License terms protecting you and detailing the limitation of liability.
 
 ---
@@ -92,10 +120,11 @@ Following a failed IDE upgrade, the user lost their recent workspaces list and p
    - Copy old conversation `.pb` files from `%USERPROFILE%\.gemini\antigravity\conversations` to the new location `%USERPROFILE%\.gemini\antigravity-ide\conversations`.
    - Copy metadata state files (`agyhub_summaries_proto.pb`, `antigravity_state.pbtxt`, `user_settings.pb`).
    - Modify the `migrate_convos_into_projects` key in `antigravity_state.pbtxt` to `MIGRATION_STATUS_UNSPECIFIED`. (This signals the IDE server on next startup to automatically migrate `.pb` files to SQLite `.db` databases).
-5. **Recent Projects Restore**:
+5. **Additional Agent Subfolders (v2.0.0)**: Recursively copy `annotations\`, `prompting\`, and `implicit\` from the old agent dir to the new one, preserving any newer files already present at the destination.
+6. **Recent Projects Restore**:
    - Connect to the SQLite database at `%APPDATA%\Antigravity IDE\User\globalStorage\state.vscdb`.
    - Update/Insert the JSON array of workspace folder URIs into the `ItemTable` under the key `history.recentlyOpenedPathsList`.
-6. **No Auto-Cleanup**: Print all backup directory paths at completion and instruct the user to verify functionality and delete backups manually.
+7. **No Auto-Cleanup**: Print all backup directory paths at completion and instruct the user to verify functionality and delete backups manually.
 
 ---
 
@@ -118,3 +147,30 @@ Please review these files and perform the following tasks:
 3. (Optional) Help me adapt or rewrite these scripts to work on my specific operating system or custom directory structure (e.g. macOS/Linux, custom profile paths, etc.).
 4. Guide me through running this safely on my machine, ensuring I have correct manual backups.
 ```
+
+---
+
+## 📜 Changelog
+
+### v2.0.0 — 2026-05-21
+**Added**
+- Migration of additional agent subfolders that the IDE's internal migration leaves behind:
+  - `annotations\` — last-viewed-time pointers for past conversations.
+  - `prompting\` — custom prompt configurations (incl. nested `browser\` subdir).
+  - `implicit\` — implicit context store.
+- Script version reporting on startup (`$SCRIPT_VERSION = "2.0.0"`).
+- "What This Tool Can and Cannot Recover" section documenting recoverable items, unrecoverable items, and known IDE-side bugs.
+- `.gitignore` covering recovery helpers, timestamped backup folders, and OS / editor cruft.
+
+**Documented (post-mortem findings)**
+- The new build's `chat.ChatSessionStore.index` initializes empty on first launch after a forced update; its "Migrating 0 chat sessions" log line is the smoking gun.
+- Old `.pb` conversation files are encrypted at rest — they cannot be decrypted offline.
+- The `agentSessions` UNKNOWN service error in `renderer.log` is an IDE-side defect, not something a filesystem-level migration can fix.
+
+### v1.0.0 — 2026-05-20
+**Initial release**
+- Profile restore from `Antigravity IDE.zip` archive.
+- Agent state copy (`*.pb` conversations, `agyhub_summaries_proto.pb`, `antigravity_state.pbtxt`, `user_settings.pb`).
+- Migration flag reset for the IDE's internal `.pb` → SQLite trajectory conversion.
+- Recent projects list restored via SQL `UPDATE` / `INSERT` on `state.vscdb`.
+- Pre-execution safety backups of the active User folder and active agent folder.

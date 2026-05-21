@@ -1,12 +1,33 @@
-# Temporary extraction paths
-extracted_temp/
+# Recovery / diagnostic helpers (machine-specific, not for distribution)
+_*.ps1
+_*.py
+_recovery_findings/
 
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
+# Personal reference notes kept locally
+IAmABritishGuy-Reddit-Fix.txt
 
-# Backups created by migration scripts
+# Backups produced by the migration script
 *.user_restore_backup
 *.backup
 *Backup_*
+User_Backup_*/
+antigravity-ide_Backup_*/
+
+# Temporary extraction paths
+extracted_temp/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/

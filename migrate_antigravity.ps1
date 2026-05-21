@@ -2,6 +2,8 @@
 # Stop on errors
 $ErrorActionPreference = "Stop"
 
+$SCRIPT_VERSION = "2.0.0"
+
 Write-Host "=============================================" -ForegroundColor Red -BackgroundColor Black
 Write-Host " !!! WARNING: USE AT YOUR OWN RISK !!!" -ForegroundColor Red -BackgroundColor Black
 Write-Host " This script modifies configuration databases and profiles." -ForegroundColor Red
@@ -10,7 +12,7 @@ Write-Host "=============================================" -ForegroundColor Red 
 Write-Host
 
 Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host " Antigravity IDE Migration Script" -ForegroundColor Cyan
+Write-Host " Antigravity IDE Migration Script v$SCRIPT_VERSION" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host
 
@@ -167,6 +169,53 @@ if (Test-Path $OldGeminiDir) {
     Write-Host "Agent state and conversation history files copied." -ForegroundColor Green
 } else {
     Write-Host "Warning: Old agent directory not found at $OldGeminiDir. Skipping file migration step." -ForegroundColor Red
+}
+Write-Host
+
+# 4.5 Migrate Additional Agent Subfolders (annotations / prompting / implicit)
+# Added in v2.0.0: these folders are NOT touched by the new IDE's internal
+# migration. Copying them preserves view-time annotations, custom prompts,
+# and implicit context that would otherwise be orphaned in the old location.
+Write-Host "Migrating additional agent subfolders (annotations, prompting, implicit)..." -ForegroundColor Yellow
+if (Test-Path $OldGeminiDir) {
+    foreach ($subfolder in @('annotations', 'prompting', 'implicit')) {
+        $src = Join-Path $OldGeminiDir $subfolder
+        $dst = Join-Path $NewGeminiDir $subfolder
+
+        if (-not (Test-Path $src)) {
+            Write-Host " - $subfolder : not present in old agent dir, skipping." -ForegroundColor Gray
+            continue
+        }
+        if (-not (Test-Path $dst)) {
+            New-Item -ItemType Directory -Path $dst -Force | Out-Null
+        }
+
+        $copied = 0; $kept = 0; $replaced = 0
+        foreach ($file in Get-ChildItem -LiteralPath $src -Recurse -File) {
+            $relativePath = $file.FullName.Substring($src.Length).TrimStart('\')
+            $targetFile = Join-Path $dst $relativePath
+            $targetDir  = Split-Path -Parent $targetFile
+            if (-not (Test-Path $targetDir)) {
+                New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+            }
+            if (Test-Path $targetFile) {
+                $existing = Get-Item -LiteralPath $targetFile
+                if ($file.LastWriteTime -gt $existing.LastWriteTime) {
+                    Copy-Item -LiteralPath $file.FullName -Destination $targetFile -Force
+                    $replaced++
+                } else {
+                    $kept++
+                }
+            } else {
+                Copy-Item -LiteralPath $file.FullName -Destination $targetFile -Force
+                $copied++
+            }
+        }
+        Write-Host (" - $subfolder : copied=$copied  replaced=$replaced  kept-newer-in-dst=$kept") -ForegroundColor Gray
+    }
+    Write-Host "Additional subfolders migrated." -ForegroundColor Green
+} else {
+    Write-Host "Warning: Old agent directory not found. Skipping additional subfolder migration." -ForegroundColor Red
 }
 Write-Host
 
