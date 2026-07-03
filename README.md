@@ -174,3 +174,14 @@ Please review these files and perform the following tasks:
 - Migration flag reset for the IDE's internal `.pb` → SQLite trajectory conversion.
 - Recent projects list restored via SQL `UPDATE` / `INSERT` on `state.vscdb`.
 - Pre-execution safety backups of the active User folder and active agent folder.
+
+---
+
+**Designed and developed by**
+
+**Kevin Mullett**
+VP of Program Services
+
+[![X](https://img.shields.io/badge/X-%40kmullett-000000?logo=x&logoColor=white)](https://x.com/kmullett)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-kevinmullett-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/kevinmullett)
+[![Website](https://img.shields.io/badge/Web-boomfish.com-614876)](https://boomfish.com)
